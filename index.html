@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calendário de Cobranças</title>
+<style>
+:root{color-scheme:dark;--bg:#0a0c12;--card:#12151d;--card2:#181c27;--line:#232838;--tx:#eef0f6;--mut:#8a93a8;--ac:#6366f1;--ac2:#8b5cf6;--ok:#34d399;--dn:#60a5fa;--no:#f87171}
+*{box-sizing:border-box;margin:0}
+body{font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:radial-gradient(900px 500px at 10% -10%,#1b1f4a55,transparent),radial-gradient(700px 400px at 100% 0,#3b1b5a40,transparent),var(--bg);color:var(--tx);min-height:100vh;padding:24px 16px}
+.wrap{max-width:1120px;margin:0 auto}
+header{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-end;margin-bottom:20px}
+h1{font-size:1.6rem;font-weight:800;letter-spacing:-.02em}
+h1 span{background:linear-gradient(90deg,var(--ac),var(--ac2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--mut);font-size:.9rem;margin-top:4px;text-transform:capitalize}
+.stats{display:flex;gap:10px;flex-wrap:wrap}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 16px;min-width:108px}
+.stat b{display:block;font-size:1.5rem;font-weight:800}
+.stat small{color:var(--mut);font-size:.72rem;text-transform:uppercase;letter-spacing:.06em}
+.main{display:grid;grid-template-columns:minmax(320px,480px) 1fr;gap:18px;align-items:start}
+@media(max-width:860px){.main{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 10px 30px #0006}
+.bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.bar h2{font-size:1.1rem;text-transform:capitalize;font-weight:700}
+.nav{display:flex;gap:6px}
+.btn{background:var(--card2);border:1px solid var(--line);color:var(--tx);border-radius:10px;padding:7px 12px;cursor:pointer;font-size:.85rem;transition:.15s}
+.btn:hover{border-color:var(--ac);background:#1d2233}
+.g{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.wd{text-align:center;font-size:.68rem;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;padding:4px 0}
+.d{position:relative;aspect-ratio:1/1.05;border-radius:12px;background:var(--card2);border:1px solid transparent;padding:7px;cursor:pointer;display:flex;flex-direction:column;justify-content:space-between;transition:.15s;overflow:hidden}
+.d:hover{border-color:#3a4160;transform:translateY(-1px)}
+.d .n{font-size:.9rem;font-weight:600}
+.d .c{font-size:.68rem;color:var(--ok);font-weight:700;text-align:right}
+.d .p{position:absolute;left:0;bottom:0;height:3px;background:linear-gradient(90deg,var(--ok),#2dd4bf);border-radius:0 3px 0 0}
+.d.t .n{background:var(--ac);color:#fff;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:.8rem}
+.d.s{background:linear-gradient(145deg,#2a2f6b,#3b2a72);border-color:var(--ac)}
+.d.f{background:#141824}
+.tabs{display:flex;gap:6px;background:var(--card2);padding:4px;border-radius:12px;margin:14px 0 10px}
+.tab{flex:1;text-align:center;padding:8px 6px;border-radius:9px;cursor:pointer;font-size:.8rem;font-weight:600;color:var(--mut);transition:.15s}
+.tab em{font-style:normal;opacity:.8;margin-left:4px}
+.tab.on{background:var(--card);color:var(--tx);box-shadow:0 1px 6px #0006}
+input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card2);color:var(--tx);font-size:.88rem;margin-bottom:10px;outline:none}
+input:focus{border-color:var(--ac)}
+.list{display:flex;flex-direction:column;gap:6px;max-height:56vh;overflow:auto;padding-right:2px}
+.r{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--card2);border:1px solid var(--line);border-left:3px solid var(--mut);border-radius:12px;padding:10px 12px}
+.r.ok{border-left-color:var(--ok)}.r.dn{border-left-color:var(--dn)}.r.no{border-left-color:var(--no)}
+.r b{font-size:.86rem;font-weight:600}
+.r small{display:block;color:var(--mut);font-size:.74rem;margin-top:2px}
+.a{border:0;border-radius:9px;padding:7px 12px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap}
+.a.ok{background:var(--ok);color:#052e1f}.a.dn{background:#243049;color:#bcd6ff}
+.tag{font-size:.72rem;font-weight:700;color:var(--no);background:#3b1c20;padding:5px 9px;border-radius:8px;white-space:nowrap}
+.empty{color:var(--mut);text-align:center;padding:26px;font-size:.88rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<div><h1>Cobranças <span>Condomínios</span></h1><div class="sub" id="hoje"></div></div>
+<div class="stats">
+<div class="stat"><b id="s1">0</b><small>Cobrados hoje</small></div>
+<div class="stat"><b id="s2">0</b><small>Liberados hoje</small></div>
+<div class="stat"><b id="s3">0</b><small>Aguardando</small></div>
+</div>
+</header>
+<div class="main">
+<div class="card">
+<div class="bar"><h2 id="mt"></h2><div class="nav"><button class="btn" id="pv">‹</button><button class="btn" id="td">Hoje</button><button class="btn" id="nx">›</button></div></div>
+<div class="g" id="wd"></div><div class="g" id="cal" style="margin-top:6px"></div>
+</div>
+<div class="card">
+<div class="bar"><h2 id="st"></h2></div>
+<div class="tabs" id="tabs"></div>
+<input id="q" placeholder="Buscar condomínio...">
+<div class="list" id="pn"></div>
+</div>
+</div>
+</div>
+<script>
+const H={
+"2026-10-28":["VILLAS FLORES","RESIDENCIAL DOS GIRASSÓIS","QUINTA DO BOSQUE II","QUINTA DO BOSQUE III","RESIDENCIAL ALTA VISTA","RESIDENCIAL ANNE LOUISE","RESIDENCIAL IGARA PARK III","RESIDENCIAL PARQUE DAS PALMEIRAS"],
+"2026-10-29":["CALIFORNIA RESIDENCE","CARTAGO","EDIFICIO FLORESTA","PARQUE PORTO SIENA","RESIDENCIAL VIA APPIA","TERRANOVA RESIDENCIAL","RESIDENCIAL FLORENÇA","RESIDENCIAL SOLAR DO LAGO","RESIDENCIAL VIVARE","RESIDENCIAL PORTO DOS ALPES","RESIDENCIAL COSTA BELLA","QUINTAS DO LAGO MAGGIORE"],
+"2026-10-30":["VILLAS FLORES","RESIDENCIAL DOS GIRASSÓIS","QUINTA DO BOSQUE II","QUINTA DO BOSQUE III","RESIDENCIAL ALTA VISTA","RESIDENCIAL ANNE LOUISE","RESIDENCIAL IGARA PARK III","RESIDENCIAL PARQUE DAS PALMEIRAS","RESIDENCIAL ANITA GARIBALDI","RESIDENCIAL BONALUME"],
+"2026-11-03":["RESIDENCIAL VIA APPIA","RESIDENCIAL COSTA BELLA","RESIDENCIAL ANNE LOUISE"]};
+const N=["CALIFORNIA RESIDENCE","CARTAGO","EDIFICIO FLORESTA","PARQUE PORTO SIENA","QUINTA DO BOSQUE II","QUINTA DO BOSQUE III","QUINTAS DO LAGO MAGGIORE","RESIDENCIAL ALTA VISTA","RESIDENCIAL ANNE LOUISE","RESIDENCIAL DOS GIRASSÓIS","RESIDENCIAL FLORENÇA","RESIDENCIAL IGARA PARK III","RESIDENCIAL SOLAR DO LAGO","RESIDENCIAL VIVARE","VILLAS FLORES","RESIDENCIAL ANITA GARIBALDI","RESIDENCIAL BONALUME","RESIDENCIAL COSTA BELLA","RESIDENCIAL L'ACQUAS ALPES I","RESIDENCIAL PARQUE DAS PALMEIRAS","RESIDENCIAL PORTO DOS ALPES","RESIDENCIAL VIA APPIA","TERRANOVA RESIDENCIAL"];
+const K="cobr_ov";
+const ld=()=>{try{return JSON.parse(localStorage.getItem(K))||{}}catch(e){return{}}};
+const sv=o=>{try{localStorage.setItem(K,JSON.stringify(o))}catch(e){}};
+const iso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const add=(d,n)=>{const t=new Date(d+"T12:00:00");t.setDate(t.getDate()+n);return iso(t)};
+const fm=d=>d.slice(8)+"/"+d.slice(5,7);
+const HOJE=iso(new Date());
+let sel=HOJE,cur=new Date(),o=ld(),tab="ok";cur.setDate(1);
+const ch=(d,n)=>{const k=d+"|"+n;return k in o?o[k]:(H[d]||[]).includes(n)};
+const day=d=>N.filter(n=>ch(d,n));
+const alld=()=>[...new Set([...Object.keys(H),...Object.keys(o).map(k=>k.split("|")[0])])].sort();
+const last=(n,d)=>alld().filter(x=>x<d&&ch(x,n)).pop();
+function split(d){const dn=[],ok=[],no=[];
+ N.forEach((n,i)=>{if(ch(d,n))dn.push(i);else{const b=ch(add(d,-1),n)?add(d,-1):ch(add(d,1),n)?add(d,1):null;b?no.push([i,b]):ok.push(i)}});
+ return{dn,ok,no}}
+function R(){
+ const y=cur.getFullYear(),m=cur.getMonth();
+ mt.textContent=cur.toLocaleDateString("pt-BR",{month:"long",year:"numeric"});
+ wd.innerHTML=["dom","seg","ter","qua","qui","sex","sáb"].map(x=>`<div class="wd">${x}</div>`).join("");
+ let h="";const off=new Date(y,m,1).getDay(),nd=new Date(y,m+1,0).getDate();
+ for(let i=0;i<off;i++)h+="<div></div>";
+ for(let i=1;i<=nd;i++){const d=iso(new Date(y,m,i)),c=day(d).length;
+  h+=`<div class="d ${d===HOJE?"t":""} ${d===sel?"s":""} ${d>HOJE?"f":""}" data-d="${d}"><span class="n">${i}</span><span class="c">${c?c:""}</span>${c?`<span class="p" style="width:${c/N.length*100}%"></span>`:""}</div>`}
+ cal.innerHTML=h;
+ const t=split(HOJE);s1.textContent=t.dn.length;s2.textContent=t.ok.length;s3.textContent=t.no.length;
+ hoje.textContent=new Date().toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+ P()}
+function P(){
+ st.textContent=new Date(sel+"T12:00:00").toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long"})+(sel===HOJE?" • hoje":"");
+ const{dn,ok,no}=split(sel),Q=q.value.toUpperCase();
+ tabs.innerHTML=[["ok","Liberados",ok.length],["dn","Cobrados",dn.length],["no","Aguardando",no.length]].map(([k,l,c])=>`<div class="tab ${tab===k?"on":""}" data-t="${k}">${l}<em>${c}</em></div>`).join("");
+ let L=tab==="ok"?ok.map(i=>[i]):tab==="dn"?dn.map(i=>[i]):no;
+ L=L.filter(([i])=>N[i].includes(Q));
+ pn.innerHTML=L.map(([i,b])=>{
+  if(tab==="no")return`<div class="r no"><div><b>${N[i]}</b><small>cobrado em ${fm(b)}</small></div><span class="tag">libera ${fm(add(b,2))}</span></div>`;
+  const u=last(N[i],sel);
+  return`<div class="r ${tab}"><div><b>${N[i]}</b><small>${tab==="ok"?(u?"última cobrança: "+fm(u):"nunca cobrado"):"cobrado neste dia"}</small></div><button class="a ${tab}" data-n="${i}">${tab==="ok"?"Cobrar":"Desfazer"}</button></div>`}).join("")||'<div class="empty">Nenhum condomínio aqui</div>'}
+cal.onclick=e=>{const d=e.target.closest(".d");if(d){sel=d.dataset.d;R()}};
+tabs.onclick=e=>{const t=e.target.closest(".tab");if(t){tab=t.dataset.t;P()}};
+pn.onclick=e=>{const b=e.target.closest(".a");if(!b)return;const n=N[b.dataset.n];o[sel+"|"+n]=!ch(sel,n);sv(o);R()};
+q.oninput=P;
+pv.onclick=()=>{cur.setMonth(cur.getMonth()-1);R()};
+nx.onclick=()=>{cur.setMonth(cur.getMonth()+1);R()};
+td.onclick=()=>{sel=HOJE;cur=new Date();cur.setDate(1);R()};
+R();
+</script>
+</body>
+</html>
