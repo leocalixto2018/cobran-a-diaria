@@ -82,14 +82,11 @@ const H={
 "2026-10-30":["VILLAS FLORES","RESIDENCIAL DOS GIRASSÓIS","QUINTA DO BOSQUE II","QUINTA DO BOSQUE III","RESIDENCIAL ALTA VISTA","RESIDENCIAL ANNE LOUISE","RESIDENCIAL IGARA PARK III","RESIDENCIAL PARQUE DAS PALMEIRAS","RESIDENCIAL ANITA GARIBALDI","RESIDENCIAL BONALUME"],
 "2026-11-03":["RESIDENCIAL VIA APPIA","RESIDENCIAL COSTA BELLA","RESIDENCIAL ANNE LOUISE"]};
 const N=["CALIFORNIA RESIDENCE","CARTAGO","EDIFICIO FLORESTA","PARQUE PORTO SIENA","QUINTA DO BOSQUE II","QUINTA DO BOSQUE III","QUINTAS DO LAGO MAGGIORE","RESIDENCIAL ALTA VISTA","RESIDENCIAL ANNE LOUISE","RESIDENCIAL DOS GIRASSÓIS","RESIDENCIAL FLORENÇA","RESIDENCIAL IGARA PARK III","RESIDENCIAL SOLAR DO LAGO","RESIDENCIAL VIVARE","VILLAS FLORES","RESIDENCIAL ANITA GARIBALDI","RESIDENCIAL BONALUME","RESIDENCIAL COSTA BELLA","RESIDENCIAL L'ACQUAS ALPES I","RESIDENCIAL PARQUE DAS PALMEIRAS","RESIDENCIAL PORTO DOS ALPES","RESIDENCIAL VIA APPIA","TERRANOVA RESIDENCIAL"];
-const K="cobr_ov";
-const ld=()=>{try{return JSON.parse(localStorage.getItem(K))||{}}catch(e){return{}}};
-const sv=o=>{try{localStorage.setItem(K,JSON.stringify(o))}catch(e){}};
 const iso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
 const add=(d,n)=>{const t=new Date(d+"T12:00:00");t.setDate(t.getDate()+n);return iso(t)};
 const fm=d=>d.slice(8)+"/"+d.slice(5,7);
 const HOJE=iso(new Date());
-let sel=HOJE,cur=new Date(),o=ld(),tab="ok";cur.setDate(1);
+let sel=HOJE,cur=new Date(),o={},tab="ok";cur.setDate(1);
 const ch=(d,n)=>{const k=d+"|"+n;return k in o?o[k]:(H[d]||[]).includes(n)};
 const day=d=>N.filter(n=>ch(d,n));
 const alld=()=>[...new Set([...Object.keys(H),...Object.keys(o).map(k=>k.split("|")[0])])].sort();
@@ -121,12 +118,14 @@ function P(){
   return`<div class="r ${tab}"><div><b>${N[i]}</b><small>${tab==="ok"?(u?"última cobrança: "+fm(u):"nunca cobrado"):"cobrado neste dia"}</small></div><button class="a ${tab}" data-n="${i}">${tab==="ok"?"Cobrar":"Desfazer"}</button></div>`}).join("")||'<div class="empty">Nenhum condomínio aqui</div>'}
 cal.onclick=e=>{const d=e.target.closest(".d");if(d){sel=d.dataset.d;R()}};
 tabs.onclick=e=>{const t=e.target.closest(".tab");if(t){tab=t.dataset.t;P()}};
-pn.onclick=e=>{const b=e.target.closest(".a");if(!b)return;const n=N[b.dataset.n];o[sel+"|"+n]=!ch(sel,n);sv(o);R()};
+pn.onclick=e=>{const b=e.target.closest(".a");if(!b)return;const n=N[b.dataset.n];const k=sel+"|"+n,v=!ch(sel,n);o[k]=v;R();fetch("/api/ov",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({k,v})}).then(load).catch(()=>{})};
 q.oninput=P;
 pv.onclick=()=>{cur.setMonth(cur.getMonth()-1);R()};
 nx.onclick=()=>{cur.setMonth(cur.getMonth()+1);R()};
 td.onclick=()=>{sel=HOJE;cur=new Date();cur.setDate(1);R()};
-R();
+function load(){fetch("/api/ov").then(r=>r.json()).then(j=>{o=j;R()}).catch(()=>{})}
+setInterval(load,5000);window.onfocus=load;
+R();load();
 </script>
 </body>
 </html>
